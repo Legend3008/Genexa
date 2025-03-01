@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, MessageSquare, Shield } from 'lucide-react';
 import * as THREE from 'three';
@@ -7,6 +7,51 @@ import * as THREE from 'three';
 const HeroSection = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [userMessage, setUserMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState([
+    { type: 'ai', content: 'How can I help diagnose your health concerns today?' },
+  ]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleUserInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserMessage(e.target.value);
+  };
+
+  const handleSubmitMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    if (!userMessage.trim()) return;
+    
+    // Add user message to chat
+    setChatMessages(prev => [...prev, { type: 'user', content: userMessage.trim() }]);
+    
+    // Simulate AI processing
+    setIsProcessing(true);
+    
+    // Simulate AI response after a short delay
+    setTimeout(() => {
+      // Generate AI response based on user input
+      let aiResponse = '';
+      const userInput = userMessage.toLowerCase();
+      
+      if (userInput.includes('headache') || userInput.includes('head') || userInput.includes('pain')) {
+        aiResponse = "I understand you're experiencing headaches. How long have you been having them, and do you notice any triggers? This could be related to stress, dehydration, or other factors.";
+      } else if (userInput.includes('fever') || userInput.includes('temperature')) {
+        aiResponse = "A fever can be a sign that your body is fighting an infection. Are you experiencing any other symptoms like chills, fatigue, or body aches?";
+      } else if (userInput.includes('cough') || userInput.includes('cold') || userInput.includes('flu')) {
+        aiResponse = "Could you describe your cough? Is it dry or productive? Also, have you been experiencing any other respiratory symptoms or fever?";
+      } else if (userInput.includes('stomach') || userInput.includes('nausea') || userInput.includes('vomit')) {
+        aiResponse = "Stomach issues can be caused by various factors. Have you eaten anything unusual lately? How long have you been experiencing these symptoms?";
+      } else {
+        aiResponse = "I'd like to understand more about your symptoms. Could you provide additional details so I can better assist you?";
+      }
+      
+      // Add AI response to chat
+      setChatMessages(prev => [...prev, { type: 'ai', content: aiResponse }]);
+      setIsProcessing(false);
+      setUserMessage('');
+    }, 1500);
+  };
 
   useEffect(() => {
     // Only load Three.js on client-side
@@ -193,32 +238,47 @@ const HeroSection = () => {
                   <span className="px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">Online</span>
                 </div>
                 
-                <div className="space-y-4 mb-6">
-                  <div className="bg-blue-50 rounded-lg p-3 max-w-[80%]">
-                    <p className="text-gray-700">How can I help diagnose your health concerns today?</p>
-                  </div>
-                  
-                  <div className="bg-white rounded-lg p-3 ml-auto max-w-[80%] shadow-sm">
-                    <p className="text-gray-700">I've been having headaches for the past week.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-3 max-w-[80%]">
-                    <p className="text-gray-700">I understand. Let me ask a few questions to help assess your situation better.</p>
-                  </div>
+                <div className="space-y-4 mb-6 max-h-[240px] overflow-y-auto">
+                  {chatMessages.map((message, index) => (
+                    <div 
+                      key={index} 
+                      className={`${
+                        message.type === 'ai' 
+                          ? 'bg-blue-50 rounded-lg p-3 max-w-[80%]' 
+                          : 'bg-white rounded-lg p-3 ml-auto max-w-[80%] shadow-sm'
+                      }`}
+                    >
+                      <p className="text-gray-700">{message.content}</p>
+                    </div>
+                  ))}
+                  {isProcessing && (
+                    <div className="bg-blue-50 rounded-lg p-3 max-w-[80%]">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="relative">
+                <form onSubmit={handleSubmitMessage} className="relative">
                   <input 
                     type="text" 
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
                     placeholder="Describe your symptoms in detail..."
+                    value={userMessage}
+                    onChange={handleUserInput}
+                    disabled={isProcessing}
                   />
                   <button 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white p-2 rounded-lg"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                    type="submit"
+                    disabled={isProcessing || !userMessage.trim()}
                   >
                     <ArrowRight size={18} />
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           </div>
