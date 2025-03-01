@@ -22,7 +22,7 @@ const Navbar = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
           ? "py-3 bg-white/80 backdrop-blur-lg shadow-md" 
-          : "py-5 bg-transparent"
+          : "py-5 bg-gradient-to-r from-blue-500 to-teal-400"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -32,8 +32,8 @@ const Navbar = () => {
             to="/" 
             className="text-2xl font-bold text-medical-800 flex items-center hover:text-medical-600 transition-colors duration-300"
           >
-            <span className="text-medical-500">Medi</span>
-            <span>Sphere</span>
+            <span className="text-medical-500">Health</span>
+            <span>Sync</span>
             <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-medical-500 animate-pulse-soft"></span>
           </Link>
           
@@ -84,7 +84,7 @@ const Navbar = () => {
           
           {/* Call to Action Button */}
           <div className="hidden md:flex items-center">
-            <a href="tel:+1800MEDISPHERE" className="btn-primary flex items-center gap-2 group">
+            <a href="tel:+1800HEALTHSYNC" className="btn-primary flex items-center gap-2 group">
               <Phone size={16} className="group-hover:animate-pulse" />
               <span>Emergency Call</span>
             </a>
@@ -161,7 +161,7 @@ const Navbar = () => {
           
           <div className="pt-6 border-t border-gray-100">
             <a 
-              href="tel:+1800MEDISPHERE" 
+              href="tel:+1800HEALTHSYNC" 
               className="btn-primary w-full justify-center group"
               onClick={() => setMobileMenuOpen(false)}
             >
