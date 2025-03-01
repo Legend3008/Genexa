@@ -1,8 +1,15 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, MapPin, MessageSquare, Shield } from 'lucide-react';
 import * as THREE from 'three';
+
+// Add TypeScript interface for Google Maps
+declare global {
+  interface Window {
+    google: typeof google;
+    initMap: () => void;
+  }
+}
 
 interface Symptom {
   name: string;
@@ -260,49 +267,6 @@ ${durationAdvice}
     }, 2000);
   };
 
-  const findNearbyClinics = () => {
-    setChatMessages(prev => [...prev, { 
-      type: 'user', 
-      content: 'Yes, show me nearby clinics' 
-    }]);
-    
-    setIsProcessing(true);
-    
-    // Request user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          
-          setChatMessages(prev => [...prev, { 
-            type: 'ai', 
-            content: 'I found several medical facilities near your location. You can view them on the map below.' 
-          }]);
-          
-          setIsProcessing(false);
-          setShowMap(true);
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setChatMessages(prev => [...prev, { 
-            type: 'ai', 
-            content: 'Sorry, I couldn\'t access your location. Please enable location services or manually search for clinics in your area.' 
-          }]);
-          setIsProcessing(false);
-        }
-      );
-    } else {
-      setChatMessages(prev => [...prev, { 
-        type: 'ai', 
-        content: 'Geolocation is not supported by your browser. Please manually search for clinics in your area.' 
-      }]);
-      setIsProcessing(false);
-    }
-  };
-
   const handleSubmitMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -469,15 +433,22 @@ ${durationAdvice}
   // Load the Google Maps script 
   useEffect(() => {
     if (showMap && userLocation && !window.google) {
+      // Define the callback function for when the script loads
+      window.initMap = () => {
+        initMap();
+      };
+      
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`;
+      // Use a placeholder API key - in production, you would use environment variables or a backend proxy
+      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap`;
       script.async = true;
       script.defer = true;
-      script.onload = initMap;
       document.head.appendChild(script);
 
       return () => {
-        document.head.removeChild(script);
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     } else if (showMap && userLocation && window.google) {
       initMap();
@@ -491,18 +462,18 @@ ${durationAdvice}
     const mapDiv = document.getElementById('nearbyMap');
     if (!mapDiv) return;
 
-    const map = new google.maps.Map(mapDiv, {
+    const map = new window.google.maps.Map(mapDiv, {
       center: userLocation,
       zoom: 13
     });
 
     // Add a marker for the user's location
-    new google.maps.Marker({
+    new window.google.maps.Marker({
       position: userLocation,
       map: map,
       title: 'Your Location',
       icon: {
-        path: google.maps.SymbolPath.CIRCLE,
+        path: window.google.maps.SymbolPath.CIRCLE,
         fillColor: '#4285F4',
         fillOpacity: 1,
         strokeWeight: 0,
@@ -517,9 +488,9 @@ ${durationAdvice}
       types: ['hospital', 'doctor', 'health']
     };
 
-    const service = new google.maps.places.PlacesService(map);
+    const service = new window.google.maps.places.PlacesService(map);
     service.nearbySearch(request, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
         for (let i = 0; i < results.length; i++) {
           createMarker(results[i], map);
         }
@@ -528,16 +499,16 @@ ${durationAdvice}
   };
 
   // Create a marker for each place
-  const createMarker = (place, map) => {
+  const createMarker = (place: any, map: any) => {
     if (!place.geometry || !place.geometry.location) return;
 
-    const marker = new google.maps.Marker({
+    const marker = new window.google.maps.Marker({
       map: map,
       position: place.geometry.location,
       title: place.name
     });
 
-    const infowindow = new google.maps.InfoWindow({
+    const infowindow = new window.google.maps.InfoWindow({
       content: `
         <div>
           <h3 style="font-weight:bold;margin-bottom:5px;">${place.name}</h3>
