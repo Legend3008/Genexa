@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // Add TypeScript interface for Google Maps
 declare global {
   interface Window {
-    google: typeof google;
+    google: any;
     initMap: () => void;
   }
 }
@@ -496,6 +496,44 @@ ${durationAdvice}
         }
       }
     });
+  };
+
+  // Function to find nearby clinics
+  const findNearbyClinics = () => {
+    if (navigator.geolocation) {
+      setChatMessages(prev => [...prev, { 
+        type: 'ai', 
+        content: 'Requesting location permission to find nearby medical facilities...' 
+      }]);
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          setUserLocation(location);
+          setShowMap(true);
+          
+          setChatMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: 'Great! I found your location. Here are nearby medical facilities:' 
+          }]);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setChatMessages(prev => [...prev, { 
+            type: 'ai', 
+            content: 'Unable to get your location. Please enable location services and try again.' 
+          }]);
+        }
+      );
+    } else {
+      setChatMessages(prev => [...prev, { 
+        type: 'ai', 
+        content: 'Geolocation is not supported by your browser. Please search for medical facilities manually.' 
+      }]);
+    }
   };
 
   // Create a marker for each place
